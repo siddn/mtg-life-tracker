@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MTG Life Tracker - Lobby {{ lobby_id }}</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <style>
+    body {
+      /* font-family: sans-serif; */
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .player {
+      display: inline-block;
+      border: 4px solid black;
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1rem;
+      width: 200px;
+      background: #f8f8f8;
+    }
+    .player input {
+      font-size: 1.2rem;
+      width: 80%;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .player button {
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>MTG Life Tracker</h1>
+  Lobby ID: <strong>{{ lobby_id }}</strong> <a href="" id="share-link">Share this link!</a>
+  <div id="players"></div>
+  <button onclick="addplayer()">Add Player</button>
+  <button onclick="removeplayer()">Remove Player</button>
+  <button onclick="reset()">Reset Life</button>
+  <script>
+    const socket = io();
+    const lobby = "{{ lobby_id }}";
+    const share_link = document.getElementById("share-link");
+    share_link.href = document.URL;
+    socket.emit("join", { lobby });
+
+    socket.on("update", (data) => {
+      const playersDiv = document.getElementById("players");
+      playersDiv.innerHTML = "";
+      for (const [id, info] of Object.entries(data)) {
+        const div = document.createElement("div");
+        div.className = "player";
+        div.innerHTML = `
+          <input type="text" value="${info.name}" onchange="rename('${id}', this.value)" />
+          <div>
+            <button style="font-size: 10pt;" onclick="change('${id}', -5)">-5</button>
+            <button style="font-size: 10pt;" onclick="change('${id}', -1)">-1</button>
+            <strong>${info.life}</strong>
+            <button style="font-size: 10pt;" onclick="change('${id}', 1)">+1</button>
+            <button style="font-size: 10pt;" onclick="change('${id}', 5)">+5</button>
+          </div>
+          <hr>
+          <div id="commander-damage-${id}">
+          </div>
+          <hr>
+        `;
+        playersDiv.appendChild(div);
+        // Add commander damage buttons
+        const commanderDiv = document.getElementById(`commander-damage-${id}`);
+        commanderDiv.innerHTML = "<strong>Commander Damage:</strong><br/>";
+        for (const [otherId, otherInfo] of Object.entries(data)) {
+            if (otherId === id) continue;
+            commanderDiv.insertAdjacentHTML('beforeend', `
+            <div>
+                ${otherInfo.name}:
+                <button style="font-size: 8pt;" onclick="changeCommanderDamage('${id}','${otherId}', -1)">-</button>
+                <strong id="commander1-damage-${id}">${info.commander_damage[otherId] || 0}</strong>
+                <button style="font-size: 8pt;" onclick="changeCommanderDamage('${id}','${otherId}', 1)">+</button>
+            </div>
+            `);
+        }
+        // Add Poison counters display
+        div.insertAdjacentHTML('beforeend', `
+          <div>            
+            <strong>Poison Counters</strong>
+            <button style="font-size: 10pt;" onclick="changePoison('${id}', -1)">-</button>
+             <strong>${info.poison || 0}</strong>
+            <button style="font-size: 10pt;" onclick="changePoison('${id}', 1)">+</button>
+          </div>
+        `);
+    }
+    });
+
+    function rename(player, name) {
+      socket.emit("rename", { lobby, player, name });
+    }
+    
+    function addplayer() {
+      socket.emit("add_player", { lobby });
+    }
+
+    function removeplayer() {
+      socket.emit("remove_player", { lobby });
+    }
+
+    function change(player, delta) {
+      socket.emit("change", { lobby, player, delta });
+    }
+
+    function reset() {
+      socket.emit("reset", { lobby });
+    }
+
+    function changeCommanderDamage(identifier, otherId, delta) {
+      socket.emit("change_commander_damage", { lobby, identifier, otherId, delta });
+    }
+
+    function changePoison(player, delta) {
+      socket.emit("change_poison", { lobby, player, delta });
+    }
+
+  </script>
+</body>
+</html>
