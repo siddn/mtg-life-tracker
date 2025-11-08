@@ -136,4 +136,8 @@ def on_reset(data):
     last_seen[lobby] = time.time()
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    import argparse
+    parser = argparse.ArgumentParser(description="MTG Life Tracker App")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    args = parser.parse_args()
+    socketio.run(app, host="0.0.0.0", port=5000, debug=args.debug)
