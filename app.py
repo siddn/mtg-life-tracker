@@ -43,7 +43,9 @@ def generate_lobby_id():
     card_name = card_name.replace("'", "")
     card_name = card_name.replace(",", "")
     card_name = card_name.replace(":", "")
-    return card_name
+    if card_name not in lobby_cache.keys():
+        return card_name
+    return generate_lobby_id()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
