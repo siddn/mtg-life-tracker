@@ -43,8 +43,9 @@
     const share_link = document.getElementById("share-link");
     share_link.href = document.URL;
     socket.emit("join", { lobby });
-
+    console.log("Joined lobby", lobby);
     socket.on("update", (data) => {
+      console.log("Received update:", data);
       const playersDiv = document.getElementById("players");
       playersDiv.innerHTML = "";
       for (const [id, info] of Object.entries(data)) {

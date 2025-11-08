@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, join_room, emit
 import time
 import threading
 import requests
+from copy import deepcopy
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
@@ -65,7 +66,7 @@ def on_join(data):
     lobby = data["lobby"]
     join_room(lobby)
     if lobby not in lobby_cache:
-        lobby_cache[lobby] = lobby_template.copy()
+        lobby_cache[lobby] = deepcopy(lobby_template)
     emit("update", lobby_cache[lobby], room=lobby)
     last_seen[lobby] = time.time()
 
