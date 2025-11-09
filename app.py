@@ -34,6 +34,7 @@ def lobby_prune():
         if current_time - last_seen_time > lobby_TTL:
             del lobby_cache[lobby_id]
             del last_seen[lobby_id]
+            print(f"Pruned lobby {lobby_id} due to inactivity.")
     
 threading.Thread(target=lobby_prune, daemon=True).start()
 
